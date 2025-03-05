@@ -1,12 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
-
 db = SQLAlchemy()
 
 
 class Users(db.Model):
-    _tablename_ = 'users'
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
@@ -15,7 +14,7 @@ class Users(db.Model):
     last_name = db.Column(db.String())
 
 
-    def _repr_(self):
+    def __repr__(self):
         return f'<User id: {self.id} - {self.email}>'
 
     def serialize(self):
@@ -32,7 +31,7 @@ class Products(db.Model):
     description = db.Column(db.String())
     price = db.Column(db.Float, nullable=False)
 
-    def _repr_(self):
+    def __repr__(self):
         return f'<Product: {self.id} - {self.name}>'
 
     def serialize(self):
@@ -43,9 +42,9 @@ class Products(db.Model):
 
 
 class Bills(db.Model):
-    _tablename_ = 'bills'
+    __tablename__ = 'bills'
     id = db.Column(db.Integer, primary_key=True)
-    create_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())  # default, el día de creación
+    create_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # default, el día de creación
     total = db.Column(db.Float, nullable=False)
     bill_address = db.Column(db.String())
     status = db.Column(db.Enum('pending', 'paid', 'cancel', name='status'), nullable=False)
@@ -53,7 +52,7 @@ class Bills(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user_to = db.relationship('Users', foreign_keys=[user_id], backref=db.backref('bills_to', lazy='select'))
 
-    def _repr_(self):
+    def __repr__(self):
         return f'<Bills: {self.id} - user: {self.user_id}>' 
 
 
@@ -68,7 +67,7 @@ class BillItems(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'))
     product_to = db.relationship('Products', foreign_keys=[product_id], backref=db.backref('bill_items', lazy='select'))
  
-    def _repr_(self):
+    def __repr__(self):
         return f'<Bill {self.bill_id} items: {self.id} product: {self.product_id}>' 
 
 
