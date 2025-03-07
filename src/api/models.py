@@ -13,7 +13,6 @@ class Users(db.Model):
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
 
-
     def __repr__(self):
         return f'<User id: {self.id} - {self.email}>'
 
@@ -26,6 +25,7 @@ class Users(db.Model):
 
 
 class Products(db.Model):
+    __tablename__ = 'products'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), unique=True, nullable=False)
     description = db.Column(db.String())
@@ -44,71 +44,86 @@ class Products(db.Model):
 class Bills(db.Model):
     __tablename__ = 'bills'
     id = db.Column(db.Integer, primary_key=True)
-    create_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # default, el día de creación
+    create_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     total = db.Column(db.Float, nullable=False)
     bill_address = db.Column(db.String())
-    status = db.Column(db.Enum('pending', 'paid', 'cancel', name='status'), nullable=False)
-    payment = db.Column(db.Enum('visa', 'amex', 'paypal', name='payment'), nullable=False)
+    status = db.Column(db.Enum('pending', 'paid', 'cancel',
+                       name='status'), nullable=False)
+    payment = db.Column(db.Enum('visa', 'amex', 'paypal',
+                        name='payment'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user_to = db.relationship('Users', foreign_keys=[user_id], backref=db.backref('bills_to', lazy='select'))
+    user_to = db.relationship('Users', foreign_keys=[
+                              user_id], backref=db.backref('bills_to', lazy='select'))
 
     def __repr__(self):
-        return f'<Bills: {self.id} - user: {self.user_id}>' 
+        return f'<Bills: {self.id} - user: {self.user_id}>'
 
 
 class BillItems(db.Model):
-    _tablename_ = 'bill_items'
+    __tablename__ = 'bill_items'
     id = db.Column(db.Integer, primary_key=True)
     price_per_unit = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     total_price = db.Column(db.Float, nullable=False)
     bill_id = db.Column(db.Integer, db.ForeignKey('bills.id'))
-    bill_to = db.relationship('Bills', foreign_keys=[bill_id], backref=db.backref('bill_items', lazy='select'))
+    bill_to = db.relationship('Bills', foreign_keys=[
+                              bill_id], backref=db.backref('bill_items', lazy='select'))
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'))
-    product_to = db.relationship('Products', foreign_keys=[product_id], backref=db.backref('bill_items', lazy='select'))
- 
+    product_to = db.relationship('Products', foreign_keys=[
+                                 product_id], backref=db.backref('bill_items', lazy='select'))
+
     def __repr__(self):
-        return f'<Bill {self.bill_id} items: {self.id} product: {self.product_id}>' 
+        return f'<Bill {self.bill_id} items: {self.id} product: {self.product_id}>'
 
 
 class Followers(db.Model):
-    _tablename_ = 'followers'
+    __tablename__ = 'followers'
     id = db.Column(db.Integer, primary_key=True)
     following_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    following_to = db.relationship('Users', foreign_keys=[following_id], backref=db.backref('following_to'), lazy='select')
+    following_to = db.relationship('Users', foreign_keys=[
+                                   following_id], backref=db.backref('following_to', lazy='select'))
     follower_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    follower_to = db.relationship('Users', foreign_keys=[follower_id], backref=db.backref('follower_to'), lazy='select')
+    follower_to = db.relationship('Users', foreign_keys=[
+                                  follower_id], backref=db.backref('follower_to', lazy='select'))
 
 
 class Post(db.Model):
-    tablename = 'post'
+    __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
     description = db.Column(db.String())
     body = db.Column(db.String())
-    date = db.Column(db.DateTime)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
     image_url = db.Column(db.String())
-    user_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_to = db.relationship('Users', foreign_keys=[
+                              user_id], backref=db.backref('posts', lazy='select'))
 
 
 class Medias(db.Model):
-    tablename = 'medias'
+    __tablename__ = 'medias'
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.Enum('Instagram', 'Facebook', 'x', name='type'))
-    url = db.Column(db.String())
-    post_id = db.Column(db.Integer)
+    url = db.Column(db.String)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    post_to = db.relationship('Post', foreign_keys=[
+                              post_id], backref=db.backref('medias', lazy='select'))
 
 
 class Comments(db.Model):
-    tablename = 'comments'
+    __tablename__ = 'comments'
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.String())
-    user_id = db.Column(db.Integer)
-    post_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_to = db.relationship('Users', foreign_keys=[
+                              user_id], backref=db.backref('comments', lazy='select'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    post_to = db.relationship('Post', foreign_keys=[
+                              post_id], backref=db.backref('comments', lazy='select'))
 
 
 class Characters(db.Model):
-    tablename = 'characters'
+    __tablename__ = 'characters'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String())
     height = db.Column(db.String())
@@ -120,28 +135,37 @@ class Characters(db.Model):
     gender = db.Column(db.String())
 
 
-class CharacterFavorite(db.Model):
-    table = 'character_favorite'
+class CharacterFavorites(db.Model):
+    __tablename__ = 'character_favorite'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
-    character_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_to = db.relationship('Users', foreign_keys=[user_id], backref=db.backref(
+        'character_favorites', lazy='select'))
+    character_id = db.Column(db.Integer, db.ForeignKey('characters.id'))
+    character_to = db.relationship('Characters', foreign_keys=[
+                                   character_id], backref=db.backref('character_favorites', lazy='select'))
 
 
 class Planets(db.Model):
-    table = 'planets'
+    __tablename__ = 'planets'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String())
-    diameter = db.Column(db.String())
-    rotation_period = db.Column(db.String())
-    orbital_period = db.Column(db.String())
-    gravity = db.Column(db.String())
-    population = db.Column(db.String())
-    climate = db.Column(db.String())
-    terrain = db.Column(db.String())
+    name = db.Column(db.String(50), nullable=False)
+    mass = db.Column(db.Float)
+    climate = db.Column(db.String(250))
+    terrain = db.Column(db.String(250))
+    gravity = db.Column(db.String(250))
+    diameter = db.Column(db.Integer)
+    rotation = db.Column(db.Integer)
+    population = db.Column(db.Integer)
+    translation = db.Column(db.Integer)
 
 
-class PlanetFavorite(db.Model):
-    table = 'planet_favorite'
+class PlanetFavorites(db.Model):
+    __tablename__ = 'planet_favorites'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
-    planet_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_to = db.relationship('Users', foreign_keys=[user_id], backref=db.backref(
+        'planet_favorites', lazy='select'))
+    planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'))
+    planet_to = db.relationship('Planets', foreign_keys=[
+                                planet_id], backref=db.backref('planet_favorites', lazy='select'))
